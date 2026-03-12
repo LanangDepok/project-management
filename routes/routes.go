@@ -34,17 +34,18 @@ func Setup(app *fiber.App,
 	// Protected API routes
 	api := app.Group("/api/v1", middleware.JWTProtected())
 
-	users := api.Group("/users")
-	users.Get("/page", uc.GetUserPagination)
-	users.Get("/:id", uc.GetUser)
-	users.Put("/:id", uc.UpdateUser)
-	users.Delete("/:id", uc.DeleteUser)
+	userGroup := api.Group("/users")
+	userGroup.Get("/page", uc.GetUserPagination)
+	userGroup.Get("/:id", uc.GetUser)
+	userGroup.Put("/:id", uc.UpdateUser)
+	userGroup.Delete("/:id", uc.DeleteUser)
 
-	boards := api.Group("/boards")
-	boards.Post("/", bc.CreateBoard)
-	boards.Put("/:id", bc.UpdateBoard)
-	boards.Post("/:id/members", bc.AddBoardMembers)
-	boards.Delete("/:id/members", bc.RemoveBoardMembers)
+	boardGroup := api.Group("/boards")
+	boardGroup.Post("/", bc.CreateBoard)
+	boardGroup.Put("/:id", bc.UpdateBoard)
+	boardGroup.Post("/:id/members", bc.AddBoardMembers)
+	boardGroup.Delete("/:id/members", bc.RemoveBoardMembers)
+	boardGroup.Get("/my", bc.GetMyBoardPaginated)
 }
 
 func swaggerHTML() string {

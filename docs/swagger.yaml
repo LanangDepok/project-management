@@ -319,6 +319,51 @@ paths:
       summary: Update a board
       tags:
       - boards
+  /api/v1/boards/my:
+    get:
+      description: Get all boards for the authenticated user with pagination
+      parameters:
+      - default: 1
+        description: Page number
+        in: query
+        name: page
+        type: integer
+      - default: 10
+        description: Items per page
+        in: query
+        name: limit
+        type: integer
+      - description: Filter by title
+        in: query
+        name: filter
+        type: string
+      - description: Sort field, prefix with - for DESC (e.g. -id)
+        in: query
+        name: sort
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/utils.ResponsePaginated'
+            - properties:
+                data:
+                  items:
+                    $ref: '#/definitions/models.Board'
+                  type: array
+              type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/utils.Response'
+      security:
+      - BearerAuth: []
+      summary: Get my boards
+      tags:
+      - boards
   /api/v1/users/{id}:
     delete:
       description: Soft-delete a user by internal ID

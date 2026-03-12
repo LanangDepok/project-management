@@ -1,6 +1,9 @@
 package controllers
 
 import (
+	"math"
+	"strconv"
+
 	"github.com/LanangDepok/project-management/models"
 	"github.com/LanangDepok/project-management/services"
 	"github.com/LanangDepok/project-management/utils"
@@ -180,4 +183,64 @@ func (c *BoardController) RemoveBoardMembers(ctx fiber.Ctx) error {
 	}
 
 	return utils.Success(ctx, "Member berhasil dihapus", nil)
+}
+
+// GetMyBoardPaginated godoc
+// @Summary      Get my boards
+// @Description  Get all boards for the authenticated user with pagination
+// @Tags         boards
+// @Produce      json
+// @Security     BearerAuth
+// @Param        page    query     int     false  "Page number"    default(1)
+// @Param        limit   query     int     false  "Items per page" default(10)
+// @Param        filter  query     string  false  "Filter by title"
+// @Param        sort    query     string  false  "Sort field, prefix with - for DESC (e.g. -id)"
+// @Success      200     {object}  utils.ResponsePaginated{data=[]models.Board}
+// @Failure      500     {object}  utils.Response
+// @Router       /api/v1/boards/my [get]
+func (c *BoardController) GetMyBoardPaginated(ctx fiber.Ctx) error {
+	token, ok := ctx.Locals("user").(*jwt.Token)
+	if !ok {
+		return utils.Unauthorized(ctx, "Token tidak valid", "invalid token type")
+	}
+	claims, ok := token.Claims.(jwt.MapClaims)
+	if !ok {
+		return utils.Unauthorized(ctx, "Token tidak valid", "invalid claims type")
+	}
+	userID, ok := claims["pub_id"].(string)
+	if !ok {
+		return utils.Unauthorized(ctx, "Token tidak valid", "pub_id missing")
+	}
+
+	page, _ := strconv.Atoi(ctx.Query("page", "1"))
+	limit, _ := strconv.Atoi(ctx.Query("limit", "10"))
+	if page < 1 {
+		page = 1
+	}
+	if limit < 1 || limit > 100 {
+		limit = 10
+	}
+	offset := (page - 1) * limit
+	filter := ctx.Query("filter", "")
+	sort := ctx.Query("sort", "")
+
+	boards, total, err := c.service.GetAllByUserPaginate(userID, filter, sort, limit, offset)
+	if err != nil {
+		return utils.InternalServerError(ctx, "Gagal mengambil data board", err.Error())
+	}
+
+	meta := utils.PaginationMeta{
+		Page:      page,
+		Limit:     limit,
+		Total:     int(total),
+		TotalPage: int(math.Ceil(float64(total) / float64(limit))),
+		Filter:    filter,
+		Sort:      sort,
+	}
+
+	if total == 0 {
+		return utils.NotFoundPagination(ctx, "Data board tidak ditemukan", boards, meta)
+	}
+
+	return utils.SuccessPagination(ctx, "Data board berhasil diambil", boards, meta)
 }
