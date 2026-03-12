@@ -1,5 +1,15 @@
 basePath: /
 definitions:
+  models.AddBoardMembersRequest:
+    properties:
+      user_ids:
+        example:
+        - uuid1
+        - uuid2
+        items:
+          type: string
+        type: array
+    type: object
   models.Board:
     properties:
       created_at:
@@ -60,6 +70,16 @@ definitions:
       password:
         example: secret123
         type: string
+    type: object
+  models.RemoveBoardMembersRequest:
+    properties:
+      user_ids:
+        example:
+        - uuid1
+        - uuid2
+        items:
+          type: string
+        type: array
     type: object
   models.UpdateBoardRequest:
     properties:
@@ -185,7 +205,79 @@ paths:
       summary: Create a board
       tags:
       - boards
-  /api/v1/boards/{id}:
+  /api/v1/boards/{id}/members:
+    delete:
+      consumes:
+      - application/json
+      description: Remove members from a board by public UUID
+      parameters:
+      - description: Board Public UUID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: List of user public IDs
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/models.RemoveBoardMembersRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/utils.Response'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/utils.Response'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/utils.Response'
+      security:
+      - BearerAuth: []
+      summary: Remove members from a board
+      tags:
+      - boards
+    post:
+      consumes:
+      - application/json
+      description: Add members to a board by public UUID
+      parameters:
+      - description: Board Public UUID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: List of user public IDs
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/models.AddBoardMembersRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/utils.Response'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/utils.Response'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/utils.Response'
+      security:
+      - BearerAuth: []
+      summary: Add members to a board
+      tags:
+      - boards
     put:
       consumes:
       - application/json

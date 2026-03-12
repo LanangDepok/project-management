@@ -29,12 +29,15 @@ func main() {
 		AppName: "Project Management API v1.0",
 	})
 
+	//user
 	userRepo := repositories.NewUserRepository()
 	userService := services.NewUserService(userRepo)
 	userController := controllers.NewUserController(userService)
 
+	//board
 	boardRepo := repositories.NewBoardRepository()
-	boardService := services.NewBoardService(boardRepo, userRepo)
+	boardMemberRepo := repositories.NewBoardMemberRepository()
+	boardService := services.NewBoardService(boardRepo, userRepo, boardMemberRepo)
 	boardController := controllers.NewBoardController(boardService)
 
 	routes.Setup(app, userController, boardController)

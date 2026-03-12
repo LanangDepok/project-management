@@ -79,7 +79,7 @@ func (c *BoardController) CreateBoard(ctx fiber.Ctx) error {
 // @Success      200   {object}  utils.Response{data=models.Board}
 // @Failure      400   {object}  utils.Response
 // @Failure      404   {object}  utils.Response
-// @Router       /api/v1/boards/{id} [put]
+// @Router       /api/v1/boards/{id}/members [put]
 func (c *BoardController) UpdateBoard(ctx fiber.Ctx) error {
 	publicID := ctx.Params("id")
 
@@ -116,4 +116,68 @@ func (c *BoardController) UpdateBoard(ctx fiber.Ctx) error {
 		return utils.BadRequest(ctx, "Gagal memperbarui board", err.Error())
 	}
 	return utils.Success(ctx, "Board berhasil diperbarui", board)
+}
+
+// AddBoardMembers godoc
+// @Summary      Add members to a board
+// @Description  Add members to a board by public UUID
+// @Tags         boards
+// @Accept       json
+// @Produce      json
+// @Security     BearerAuth
+// @Param        id    path      string                         true  "Board Public UUID"
+// @Param        body  body      models.AddBoardMembersRequest  true  "List of user public IDs"
+// @Success      200   {object}  utils.Response
+// @Failure      400   {object}  utils.Response
+// @Failure      404   {object}  utils.Response
+// @Router       /api/v1/boards/{id}/members [post]
+func (c *BoardController) AddBoardMembers(ctx fiber.Ctx) error {
+	publicID := ctx.Params("id")
+
+	var req models.AddBoardMembersRequest
+	if err := ctx.Bind().JSON(&req); err != nil {
+		return utils.BadRequest(ctx, "Gagal parsing request body", err.Error())
+	}
+
+	if len(req.UserIDs) == 0 {
+		return utils.BadRequest(ctx, "User IDs tidak boleh kosong", "user_ids is required")
+	}
+
+	if err := c.service.AddMember(publicID, req.UserIDs); err != nil {
+		return utils.BadRequest(ctx, "Gagal menambahkan member", err.Error())
+	}
+
+	return utils.Success(ctx, "Member berhasil ditambahkan", nil)
+}
+
+// RemoveBoardMembers godoc
+// @Summary      Remove members from a board
+// @Description  Remove members from a board by public UUID
+// @Tags         boards
+// @Accept       json
+// @Produce      json
+// @Security     BearerAuth
+// @Param        id    path      string                         true  "Board Public UUID"
+// @Param        body  body      models.RemoveBoardMembersRequest  true  "List of user public IDs"
+// @Success      200   {object}  utils.Response
+// @Failure      400   {object}  utils.Response
+// @Failure      404   {object}  utils.Response
+// @Router       /api/v1/boards/{id}/members [delete]
+func (c *BoardController) RemoveBoardMembers(ctx fiber.Ctx) error {
+	publicID := ctx.Params("id")
+
+	var req models.RemoveBoardMembersRequest
+	if err := ctx.Bind().JSON(&req); err != nil {
+		return utils.BadRequest(ctx, "Gagal parsing request body", err.Error())
+	}
+
+	if len(req.UserIDs) == 0 {
+		return utils.BadRequest(ctx, "User IDs tidak boleh kosong", "user_ids is required")
+	}
+
+	if err := c.service.RemoveMembers(publicID, req.UserIDs); err != nil {
+		return utils.BadRequest(ctx, "Gagal menghapus member", err.Error())
+	}
+
+	return utils.Success(ctx, "Member berhasil dihapus", nil)
 }

@@ -43,6 +43,8 @@ func Setup(app *fiber.App,
 	boards := api.Group("/boards")
 	boards.Post("/", bc.CreateBoard)
 	boards.Put("/:id", bc.UpdateBoard)
+	boards.Post("/:id/members", bc.AddBoardMembers)
+	boards.Delete("/:id/members", bc.RemoveBoardMembers)
 }
 
 func swaggerHTML() string {

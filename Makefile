@@ -6,6 +6,9 @@ run:
 build:
 	go build -o bin/api ./cmd/api
 
+create-migration:
+	go run ./cmd/migration create migration_name
+
 migrate-up:
 	go run ./cmd/migration up
 
@@ -17,3 +20,5 @@ seed:
 
 swagger:
 	swag init -g cmd/api/main.go --output docs
+
+

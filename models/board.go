@@ -29,3 +29,11 @@ type UpdateBoardRequest struct {
 	Description string     `json:"description" example:"Updated description"`
 	DueDate     *time.Time `json:"due_date,omitempty"`
 }
+
+type AddBoardMembersRequest struct {
+	UserIDs []string `json:"user_ids" example:"uuid1,uuid2"`
+}
+
+type RemoveBoardMembersRequest struct {
+	UserIDs []string `json:"user_ids" example:"uuid1,uuid2"`
+}
