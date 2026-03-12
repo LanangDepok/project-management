@@ -1,0 +1,119 @@
+package controllers
+
+import (
+	"github.com/LanangDepok/project-management/models"
+	"github.com/LanangDepok/project-management/services"
+	"github.com/LanangDepok/project-management/utils"
+	"github.com/gofiber/fiber/v3"
+	jwt "github.com/golang-jwt/jwt/v5"
+	"github.com/google/uuid"
+)
+
+type BoardController struct {
+	service services.BoardService
+}
+
+func NewBoardController(s services.BoardService) *BoardController {
+	return &BoardController{service: s}
+}
+
+// CreateBoard godoc
+// @Summary      Create a board
+// @Description  Create a new project board for the authenticated user
+// @Tags         boards
+// @Accept       json
+// @Produce      json
+// @Security     BearerAuth
+// @Param        body  body      models.CreateBoardRequest  true  "Board payload"
+// @Success      201   {object}  utils.Response{data=models.Board}
+// @Failure      400   {object}  utils.Response
+// @Failure      401   {object}  utils.Response
+// @Router       /api/v1/boards [post]
+func (c *BoardController) CreateBoard(ctx fiber.Ctx) error {
+	// Extract JWT claims
+	token, ok := ctx.Locals("user").(*jwt.Token)
+	if !ok {
+		return utils.Unauthorized(ctx, "Token tidak valid", "invalid token type")
+	}
+	claims, ok := token.Claims.(jwt.MapClaims)
+	if !ok {
+		return utils.Unauthorized(ctx, "Token tidak valid", "invalid claims type")
+	}
+
+	pubIDStr, ok := claims["pub_id"].(string)
+	if !ok {
+		return utils.BadRequest(ctx, "Klaim token tidak valid", "pub_id missing")
+	}
+	ownerPublicID, err := uuid.Parse(pubIDStr)
+	if err != nil {
+		return utils.BadRequest(ctx, "Gagal parse user ID", err.Error())
+	}
+
+	var req models.CreateBoardRequest
+	if err := ctx.Bind().JSON(&req); err != nil {
+		return utils.BadRequest(ctx, "Gagal parsing request body", err.Error())
+	}
+
+	board := &models.Board{
+		Title:         req.Title,
+		Description:   req.Description,
+		DueDate:       req.DueDate,
+		OwnerPublicID: ownerPublicID,
+	}
+
+	if err := c.service.Create(board); err != nil {
+		return utils.BadRequest(ctx, "Gagal membuat board", err.Error())
+	}
+	return utils.Created(ctx, "Board berhasil dibuat", board)
+}
+
+// UpdateBoard godoc
+// @Summary      Update a board
+// @Description  Update board data by public UUID
+// @Tags         boards
+// @Accept       json
+// @Produce      json
+// @Security     BearerAuth
+// @Param        id    path      string                    true  "Board Public UUID"
+// @Param        body  body      models.UpdateBoardRequest true  "Update payload"
+// @Success      200   {object}  utils.Response{data=models.Board}
+// @Failure      400   {object}  utils.Response
+// @Failure      404   {object}  utils.Response
+// @Router       /api/v1/boards/{id} [put]
+func (c *BoardController) UpdateBoard(ctx fiber.Ctx) error {
+	publicID := ctx.Params("id")
+
+	var req models.UpdateBoardRequest
+	if err := ctx.Bind().JSON(&req); err != nil {
+		return utils.BadRequest(ctx, "Gagal parsing request body", err.Error())
+	}
+	board := &models.Board{
+		Title:       req.Title,
+		Description: req.Description,
+		DueDate:     req.DueDate,
+	}
+
+	if err := ctx.Bind().JSON(board); err != nil {
+		return utils.BadRequest(ctx, "Gagal parsing request body", err.Error())
+	}
+
+	if _, err := uuid.Parse(publicID); err != nil {
+		return utils.BadRequest(ctx, "ID tidak valid", err.Error())
+	}
+
+	existingBoard, err := c.service.GetByPublicID(publicID)
+	if err != nil {
+		return utils.NotFound(ctx, "Board tidak ditemukan", err.Error())
+	}
+
+	board.InternalID = existingBoard.InternalID
+	board.PublicID = existingBoard.PublicID
+	board.OwnerID = existingBoard.OwnerID
+	board.OwnerPublicID = existingBoard.OwnerPublicID
+	board.CreatedAt = existingBoard.CreatedAt
+
+	if err := c.service.Update(board); err != nil {
+		return utils.BadRequest(ctx, "Gagal memperbarui board", err.Error())
+	}
+	return utils.Success(ctx, "Board berhasil diperbarui", board)
+}

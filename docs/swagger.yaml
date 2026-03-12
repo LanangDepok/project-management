@@ -1,0 +1,434 @@
+basePath: /
+definitions:
+  models.Board:
+    properties:
+      created_at:
+        type: string
+      description:
+        type: string
+      due_date:
+        type: string
+      internal_id:
+        type: integer
+      owner_internal_id:
+        type: integer
+      owner_public_id:
+        type: string
+      public_id:
+        type: string
+      title:
+        type: string
+    type: object
+  models.CreateBoardRequest:
+    properties:
+      description:
+        example: Q3 2025 sprint tasks
+        type: string
+      due_date:
+        example: "2025-12-31T00:00:00Z"
+        type: string
+      title:
+        example: Sprint Board
+        type: string
+    type: object
+  models.LoginRequest:
+    properties:
+      email:
+        example: admin@gmail.com
+        type: string
+      password:
+        example: admin123
+        type: string
+    type: object
+  models.LoginResponse:
+    properties:
+      access_token:
+        type: string
+      refresh_token:
+        type: string
+      user:
+        $ref: '#/definitions/models.UserResponse'
+    type: object
+  models.RegisterRequest:
+    properties:
+      email:
+        example: john@example.com
+        type: string
+      name:
+        example: John Doe
+        type: string
+      password:
+        example: secret123
+        type: string
+    type: object
+  models.UpdateBoardRequest:
+    properties:
+      description:
+        example: Updated description
+        type: string
+      due_date:
+        type: string
+      title:
+        example: Sprint Board Updated
+        type: string
+    type: object
+  models.UpdateUserRequest:
+    properties:
+      name:
+        example: John Updated
+        type: string
+    type: object
+  models.UserResponse:
+    properties:
+      created_at:
+        type: string
+      email:
+        type: string
+      name:
+        type: string
+      public_id:
+        type: string
+      role:
+        type: string
+      updated_at:
+        type: string
+    type: object
+  utils.PaginationMeta:
+    properties:
+      filter:
+        example: triady
+        type: string
+      limit:
+        example: 10
+        type: integer
+      page:
+        example: 1
+        type: integer
+      sort:
+        example: -id
+        type: string
+      total:
+        example: 100
+        type: integer
+      total_pages:
+        example: 10
+        type: integer
+    type: object
+  utils.Response:
+    description: Standard API response envelope
+    properties:
+      data: {}
+      error:
+        type: string
+      message:
+        type: string
+      response_code:
+        type: integer
+      status:
+        type: string
+    type: object
+  utils.ResponsePaginated:
+    properties:
+      data: {}
+      error:
+        type: string
+      message:
+        type: string
+      meta:
+        $ref: '#/definitions/utils.PaginationMeta'
+      response_code:
+        type: integer
+      status:
+        type: string
+    type: object
+host: localhost:8000
+info:
+  contact: {}
+  description: REST API for Project Management built with Go Fiber v3 and GORM.
+  title: Project Management API
+  version: "1.0"
+paths:
+  /api/v1/boards:
+    post:
+      consumes:
+      - application/json
+      description: Create a new project board for the authenticated user
+      parameters:
+      - description: Board payload
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/models.CreateBoardRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            allOf:
+            - $ref: '#/definitions/utils.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/models.Board'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/utils.Response'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/utils.Response'
+      security:
+      - BearerAuth: []
+      summary: Create a board
+      tags:
+      - boards
+  /api/v1/boards/{id}:
+    put:
+      consumes:
+      - application/json
+      description: Update board data by public UUID
+      parameters:
+      - description: Board Public UUID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Update payload
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/models.UpdateBoardRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/utils.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/models.Board'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/utils.Response'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/utils.Response'
+      security:
+      - BearerAuth: []
+      summary: Update a board
+      tags:
+      - boards
+  /api/v1/users/{id}:
+    delete:
+      description: Soft-delete a user by internal ID
+      parameters:
+      - description: User Internal ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/utils.Response'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/utils.Response'
+      security:
+      - BearerAuth: []
+      summary: Delete user
+      tags:
+      - users
+    get:
+      description: Retrieve a single user by their public UUID
+      parameters:
+      - description: User Public UUID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/utils.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/models.UserResponse'
+              type: object
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/utils.Response'
+      security:
+      - BearerAuth: []
+      summary: Get user by ID
+      tags:
+      - users
+    put:
+      consumes:
+      - application/json
+      description: Update user data by public UUID
+      parameters:
+      - description: User Public UUID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Update payload
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/models.UpdateUserRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/utils.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/models.UserResponse'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/utils.Response'
+      security:
+      - BearerAuth: []
+      summary: Update user
+      tags:
+      - users
+  /api/v1/users/page:
+    get:
+      description: Retrieve users with pagination, filtering, and sorting
+      parameters:
+      - default: 1
+        description: Page number
+        in: query
+        name: page
+        type: integer
+      - default: 10
+        description: Items per page
+        in: query
+        name: limit
+        type: integer
+      - description: Filter by name or email
+        in: query
+        name: filter
+        type: string
+      - description: Sort field, prefix with - for DESC (e.g. -id)
+        in: query
+        name: sort
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/utils.ResponsePaginated'
+            - properties:
+                data:
+                  items:
+                    $ref: '#/definitions/models.UserResponse'
+                  type: array
+              type: object
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/utils.ResponsePaginated'
+      security:
+      - BearerAuth: []
+      summary: Get paginated users
+      tags:
+      - users
+  /v1/auth/login:
+    post:
+      consumes:
+      - application/json
+      description: Authenticate user and return JWT tokens
+      parameters:
+      - description: Login payload
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/models.LoginRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/utils.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/models.LoginResponse'
+              type: object
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/utils.Response'
+      summary: Login user
+      tags:
+      - auth
+  /v1/auth/register:
+    post:
+      consumes:
+      - application/json
+      description: Create a new user account
+      parameters:
+      - description: Register payload
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/models.RegisterRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/utils.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/models.UserResponse'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/utils.Response'
+      summary: Register a new user
+      tags:
+      - auth
+securityDefinitions:
+  BearerAuth:
+    description: Type "Bearer" followed by a space and JWT token.
+    in: header
+    name: Authorization
+    type: apiKey
+swagger: "2.0"
