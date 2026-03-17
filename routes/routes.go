@@ -47,9 +47,12 @@ func Setup(app *fiber.App,
 	boardGroup.Post("/:id/members", bc.AddBoardMembers)
 	boardGroup.Delete("/:id/members", bc.RemoveBoardMembers)
 	boardGroup.Get("/my", bc.GetMyBoardPaginated)
+	boardGroup.Get("/:board_id/lists", lc.GetListOnBoard)
 
 	listGroup := api.Group("/lists")
 	listGroup.Post("/", lc.CreateList)
+	listGroup.Put("/:id", lc.UpdateList)
+	listGroup.Delete("/:id", lc.DeleteList)
 }
 
 func swaggerHTML() string {
