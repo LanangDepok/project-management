@@ -1,6 +1,4 @@
-CREATE EXTENSION IF NOT EXISTS pgcrypto;
-
-CREATE TABLE users(
+CREATE TABLE IF NOT EXISTS users(
     internal_id BIGSERIAL PRIMARY KEY,
     name varchar(255) NOT NULL,
     email varchar(255) NOT NULL,

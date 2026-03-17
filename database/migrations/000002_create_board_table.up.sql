@@ -1,4 +1,4 @@
-CREATE TABLE boards(
+CREATE TABLE IF NOT EXISTS boards(
     internal_id BIGSERIAL PRIMARY KEY,
     public_id UUID NOT NULL DEFAULT gen_random_uuid(),
     title VARCHAR(255) NOT NULL,

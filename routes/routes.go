@@ -11,6 +11,7 @@ import (
 func Setup(app *fiber.App,
 	uc *controllers.UserController,
 	bc *controllers.BoardController,
+	lc *controllers.ListController,
 ) {
 	// Swagger UI
 	app.Get("/swagger", func(c fiber.Ctx) error {
@@ -46,6 +47,9 @@ func Setup(app *fiber.App,
 	boardGroup.Post("/:id/members", bc.AddBoardMembers)
 	boardGroup.Delete("/:id/members", bc.RemoveBoardMembers)
 	boardGroup.Get("/my", bc.GetMyBoardPaginated)
+
+	listGroup := api.Group("/lists")
+	listGroup.Post("/", lc.CreateList)
 }
 
 func swaggerHTML() string {
