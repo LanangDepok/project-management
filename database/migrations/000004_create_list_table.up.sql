@@ -1,4 +1,4 @@
-CREATE TABLE IF NOT EXISTS LIST(
+CREATE TABLE IF NOT EXISTS lists(
     internal_id BIGSERIAL PRIMARY KEY,
     public_id UUID NOT NULL DEFAULT gen_random_uuid(),
     board_public_id UUID NOT NULL REFERENCES boards(public_id) ON DELETE CASCADE,
